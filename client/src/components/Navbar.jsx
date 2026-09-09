@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -93,12 +93,12 @@ export default function Navbar({ onOpenBillModal, onOpenPaymentModal, onOpenPart
             </button>
 
             <button
-              onClick={onOpenPaymentModal}
+              onClick={onOpenPartyModal}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-silk-gold-500 to-silk-gold-600 hover:from-silk-gold-400 hover:to-silk-gold-500 text-stone-950 font-bold text-xs shadow-md transition"
-              title="Manual Payment Voucher (Paid)"
+              title="Register Weaver / Wholesale Party"
             >
-              <CreditCard className="w-4 h-4 text-stone-950" />
-              <span>+ Record Payment</span>
+              <UserPlus className="w-4 h-4 text-stone-950" />
+              <span>+ Add Weaver</span>
             </button>
           </div>
 
@@ -163,23 +163,12 @@ export default function Navbar({ onOpenBillModal, onOpenPaymentModal, onOpenPart
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                onOpenPaymentModal();
-              }}
-              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-silk-gold-500 text-stone-950 text-xs font-bold shadow"
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>+ Record Payment</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
                 onOpenPartyModal();
               }}
-              className="col-span-2 flex items-center justify-center gap-1.5 p-2 rounded-xl bg-stone-900 text-stone-200 border border-stone-800 text-xs font-medium"
+              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-gradient-to-r from-silk-gold-500 to-silk-gold-600 text-stone-950 text-xs font-bold shadow"
             >
-              <UserPlus className="w-4 h-4 text-silk-gold-400" />
-              <span>+ Register New Weaver / Party</span>
+              <UserPlus className="w-4 h-4" />
+              <span>+ Add Weaver</span>
             </button>
           </div>
 
