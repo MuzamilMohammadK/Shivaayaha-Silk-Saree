@@ -1,0 +1,10 @@
+{
+  "appId": "com.shivaayaha.silksarees",
+  "appName": "Shivaayaha Silk Sarees",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}

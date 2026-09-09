@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="silkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8A1534" />
+      <stop offset="100%" stop-color="#540E1B" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F4E9C1" />
+      <stop offset="50%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#AA820A" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="24" fill="url(#silkGrad)" />
+  <circle cx="50" cy="50" r="42" fill="none" stroke="url(#goldGrad)" stroke-width="2.5" stroke-dasharray="4 2" />
+  <!-- Traditional Saree Peacock/Paisley motif outline & S monogram -->
+  <path d="M50 20 C38 20, 28 30, 28 42 C28 58, 44 64, 46 72 C47 75, 48 78, 50 82 C52 78, 53 75, 54 72 C56 64, 72 58, 72 42 C72 30, 62 20, 50 20 Z" fill="none" stroke="url(#goldGrad)" stroke-width="2.5" />
+  <text x="50" y="56" font-family="'Cinzel', serif" font-size="28" font-weight="bold" fill="url(#goldGrad)" text-anchor="middle" dominant-baseline="central">S</text>
+</svg>
