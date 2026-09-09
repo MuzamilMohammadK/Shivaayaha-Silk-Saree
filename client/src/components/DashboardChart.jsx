@@ -1,273 +1,281 @@
 import React, { useState } from 'react';
 import { formatINR } from '../utils/formatters';
-import { PieChart, BarChart3, Wallet, TrendingUp, Layers, CheckCircle2, AlertCircle } from 'lucide-react';
+import { TrendingUp, BarChart3, Wallet, CheckCircle2, AlertCircle, ChevronRight } from 'lucide-react';
 
-export default function DashboardChart({ stats, topDebtors = [], paymentModes = [], monthlyTrends = [] }) {
-  const [activeTab, setActiveTab] = useState('settlement'); // 'settlement' | 'weavers' | 'modes'
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
 
-  const totalBillValue = stats?.totalBillValue || 0;
-  const totalPaid = stats?.totalPaidJama || 0;
-  const totalDue = stats?.totalOutstandingBaki || 0;
+const MODE_META = {
+  CASH:          { label: 'Cash',       color: '#10B981', bg: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+  MANUAL_UPI:    { label: 'UPI',        color: '#3B82F6', bg: 'bg-blue-500',    badge: 'bg-blue-50 text-blue-800 border-blue-200' },
+  CHEQUE:        { label: 'Cheque',     color: '#F59E0B', bg: 'bg-amber-500',   badge: 'bg-amber-50 text-amber-800 border-amber-200' },
+  BANK_TRANSFER: { label: 'IMPS/NEFT', color: '#8B5CF6', bg: 'bg-purple-500',  badge: 'bg-purple-50 text-purple-800 border-purple-200' },
+};
 
-  // Calculate settlement percentages
-  const grandTotal = totalPaid + totalDue;
-  const paidPercent = grandTotal > 0 ? Math.round((totalPaid / grandTotal) * 100) : 0;
-  const duePercent = grandTotal > 0 ? 100 - paidPercent : 0;
+function getMeta(mode) {
+  return MODE_META[mode] || { label: mode, color: '#78716C', bg: 'bg-stone-500', badge: 'bg-stone-50 text-stone-700 border-stone-200' };
+}
 
-  // Circumference for Donut Chart (radius = 54)
-  const radius = 54;
-  const circumference = 2 * Math.PI * radius;
-  const paidDashOffset = circumference - (paidPercent / 100) * circumference;
-
-  // Max debtor balance for bar graph scaling
-  const maxDebtorBalance = topDebtors.length > 0 
-    ? Math.max(...topDebtors.slice(0, 5).map(d => d.pendingBalance), 1)
-    : 1;
-
-  // Total payment modes volume
-  const totalModesAmount = paymentModes.reduce((acc, m) => acc + (m.amount || 0), 0);
-
-  const getModeColor = (mode) => {
-    switch (mode) {
-      case 'CASH': return { bg: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-200', fill: '#10B981', label: 'Cash' };
-      case 'MANUAL_UPI': return { bg: 'bg-blue-500', text: 'text-blue-700', border: 'border-blue-200', fill: '#3B82F6', label: 'Manual UPI' };
-      case 'CHEQUE': return { bg: 'bg-amber-500', text: 'text-amber-700', border: 'border-amber-200', fill: '#F59E0B', label: 'Cheque' };
-      case 'BANK_TRANSFER': return { bg: 'bg-purple-500', text: 'text-purple-700', border: 'border-purple-200', fill: '#8B5CF6', label: 'IMPS/NEFT' };
-      default: return { bg: 'bg-stone-500', text: 'text-stone-700', border: 'border-stone-200', fill: '#78716C', label: mode };
-    }
-  };
+// ─── Donut Chart ─────────────────────────────────────────────────────────────
+function DonutChart({ paidPercent }) {
+  const radius = 52;
+  const stroke = 14;
+  const circ   = 2 * Math.PI * radius;
+  const pct    = clamp(paidPercent, 0, 100);
+  const offset = circ - (pct / 100) * circ;
 
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200 shadow-sm flex flex-col justify-between h-full">
-      {/* Header & Tabs */}
-      <div>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-100">
-          <div>
-            <h2 className="font-brand font-bold text-base text-stone-900 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-silk-maroon-800" />
-              <span>Ledger Analytics Graph</span>
-            </h2>
-            <p className="text-[11px] text-stone-500 mt-0.5">Visual breakdown of payments, pending dues & weavers</p>
+    <svg viewBox="0 0 130 130" className="w-full h-full" aria-label={`${pct}% settled`}>
+      <defs>
+        <linearGradient id="paidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stopColor="#34D399" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+        <linearGradient id="dueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stopColor="#FECACA" />
+          <stop offset="100%" stopColor="#FCA5A5" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      {/* Track */}
+      <circle cx="65" cy="65" r={radius} fill="none" stroke="url(#dueGrad)" strokeWidth={stroke} />
+      {/* Paid arc */}
+      <circle
+        cx="65" cy="65" r={radius}
+        fill="none"
+        stroke="url(#paidGrad)"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={circ}
+        strokeDashoffset={offset}
+        transform="rotate(-90 65 65)"
+        filter="url(#glow)"
+        className="transition-all duration-1000 ease-out"
+      />
+      {/* Center text */}
+      <text x="65" y="58" textAnchor="middle" fontSize="22" fontWeight="800" fill="#1C1917" fontFamily="system-ui">
+        {pct}%
+      </text>
+      <text x="65" y="74" textAnchor="middle" fontSize="9" fontWeight="700" fill="#059669" letterSpacing="1.5" fontFamily="system-ui">
+        SETTLED
+      </text>
+    </svg>
+  );
+}
+
+// ─── Bar ─────────────────────────────────────────────────────────────────────
+function Bar({ widthPct, color, className = '' }) {
+  return (
+    <div className={`w-full h-2 bg-stone-100 rounded-full overflow-hidden ${className}`}>
+      <div
+        style={{ width: `${clamp(widthPct, 4, 100)}%`, background: color }}
+        className="h-full rounded-full transition-all duration-700 ease-out"
+      />
+    </div>
+  );
+}
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+const TABS = [
+  { id: 'settlement', label: 'Settlement', icon: TrendingUp },
+  { id: 'weavers',    label: 'Weavers',    icon: BarChart3 },
+  { id: 'modes',      label: 'Modes',      icon: Wallet },
+];
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function DashboardChart({ stats = {}, topDebtors = [], paymentModes = [] }) {
+  const [tab, setTab] = useState('settlement');
+
+  const totalBillValue = stats.totalBillValue || 0;
+  const totalPaid      = stats.totalPaidJama  || 0;
+  const totalDue       = Math.max(0, stats.totalOutstandingBaki || 0); // never negative
+  const grandTotal     = totalPaid + totalDue;
+  const paidPercent    = grandTotal > 0 ? Math.round((totalPaid / grandTotal) * 100) : 0;
+  const duePercent     = 100 - clamp(paidPercent, 0, 100);
+
+  const maxDebtor = topDebtors.length ? Math.max(...topDebtors.slice(0,5).map(d => d.pendingBalance), 1) : 1;
+  const totalMode = paymentModes.reduce((s, m) => s + (m.amount || 0), 0);
+
+  const DEBTOR_COLORS = ['#B45309', '#DC2626', '#7C3AED', '#0F766E', '#1D4ED8'];
+
+  return (
+    <div className="bg-white rounded-3xl border border-stone-200 shadow-sm flex flex-col overflow-hidden">
+
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="px-5 pt-5 pb-4 border-b border-stone-100">
+        <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-4">
+          {/* Title */}
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-silk-maroon-50 border border-silk-maroon-100 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 text-silk-maroon-800" />
+            </div>
+            <div>
+              <h2 className="font-brand font-bold text-sm text-stone-900 leading-tight whitespace-nowrap">
+                Ledger Analytics
+              </h2>
+              <p className="text-[10px] text-stone-400">Live financial overview</p>
+            </div>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl self-start sm:self-auto">
-            <button
-              onClick={() => setActiveTab('settlement')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                activeTab === 'settlement'
-                  ? 'bg-white text-silk-maroon-900 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-              title="Settlement Ratio"
-            >
-              <PieChart className="w-3.5 h-3.5" />
-              <span>Settlement</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('weavers')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                activeTab === 'weavers'
-                  ? 'bg-white text-silk-maroon-900 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-              title="Top Weaver Balances"
-            >
-              <BarChart3 className="w-3.5 h-3.5" />
-              <span>Weavers</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('modes')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                activeTab === 'modes'
-                  ? 'bg-white text-silk-maroon-900 shadow-sm'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-              title="Payment Modes"
-            >
-              <Wallet className="w-3.5 h-3.5" />
-              <span>Modes</span>
-            </button>
+          {/* Tabs */}
+          <div className="flex items-center bg-stone-100 rounded-xl p-1 gap-0.5">
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                  tab === id
+                    ? 'bg-white text-silk-maroon-900 shadow-sm'
+                    : 'text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                <Icon className="w-3 h-3" />
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Tab 1: Settlement Ratio (Donut Chart) */}
-        {activeTab === 'settlement' && (
-          <div className="pt-4">
-            <div className="flex flex-col items-center justify-center py-2">
-              <div className="relative w-44 h-44 flex items-center justify-center">
-                {/* SVG Donut */}
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 140 140">
-                  {/* Background Track (Due / Rose) */}
-                  <circle
-                    cx="70"
-                    cy="70"
-                    r={radius}
-                    className="stroke-rose-100"
-                    strokeWidth="16"
-                    fill="transparent"
-                  />
-                  {/* Paid Segment (Emerald) */}
-                  <circle
-                    cx="70"
-                    cy="70"
-                    r={radius}
-                    stroke="url(#emeraldGradient)"
-                    strokeWidth="16"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={paidDashOffset}
-                    strokeLinecap="round"
-                    fill="transparent"
-                    className="transition-all duration-1000 ease-out"
-                  />
-                  {/* Gradients */}
-                  <defs>
-                    <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#10B981" />
-                      <stop offset="100%" stopColor="#059669" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+      {/* ── Body ───────────────────────────────────────────── */}
+      <div className="flex-1 px-5 py-5">
 
-                {/* Center Content */}
-                <div className="absolute text-center flex flex-col items-center">
-                  <span className="text-2xl font-black text-stone-900">{paidPercent}%</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-0.5">
-                    Settled
-                  </span>
-                </div>
+        {/* Settlement Tab */}
+        {tab === 'settlement' && (
+          <div className="flex flex-col gap-5">
+            {/* Donut + summary side by side on wider panels */}
+            <div className="flex items-center gap-5">
+              {/* Donut */}
+              <div className="w-32 h-32 shrink-0">
+                <DonutChart paidPercent={paidPercent} />
               </div>
 
-              {/* Progress Summary Bar */}
-              <div className="w-full mt-4 space-y-2">
-                <div className="w-full h-3 bg-stone-100 rounded-full overflow-hidden flex">
-                  <div
-                    style={{ width: `${paidPercent}%` }}
-                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-700"
-                    title={`Paid: ${paidPercent}%`}
-                  ></div>
-                  <div
-                    style={{ width: `${duePercent}%` }}
-                    className="h-full bg-rose-500 transition-all duration-700"
-                    title={`Due: ${duePercent}%`}
-                  ></div>
-                </div>
-
-                {/* Legend & Numbers */}
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-100 flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0"></div>
-                    <div className="overflow-hidden">
-                      <p className="text-[10px] font-semibold text-emerald-800 uppercase">Settled (Paid)</p>
-                      <p className="text-xs sm:text-sm font-extrabold text-emerald-950 truncate">{formatINR(totalPaid)}</p>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-rose-50/80 border border-rose-100 flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-rose-600 shrink-0"></div>
-                    <div className="overflow-hidden">
-                      <p className="text-[10px] font-semibold text-rose-800 uppercase">Pending (Due)</p>
-                      <p className="text-xs sm:text-sm font-extrabold text-rose-950 truncate">{formatINR(totalDue)}</p>
-                    </div>
+              {/* Stats column */}
+              <div className="flex flex-col gap-3 flex-1 min-w-0">
+                {/* Settled */}
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-50 border border-emerald-100">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">Settled (Paid)</p>
+                    <p className="text-base font-extrabold text-emerald-900 truncate">{formatINR(totalPaid)}</p>
                   </div>
                 </div>
+                {/* Pending */}
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-rose-50 border border-rose-100">
+                  <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-rose-700 uppercase tracking-wide">Pending (Due)</p>
+                    <p className="text-base font-extrabold text-rose-900 truncate">{formatINR(totalDue)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div>
+              <div className="flex items-center justify-between text-[11px] font-semibold text-stone-500 mb-1.5">
+                <span className="text-emerald-700">Paid {paidPercent}%</span>
+                <span className="text-rose-600">Due {duePercent}%</span>
+              </div>
+              <div className="w-full h-3 bg-rose-100 rounded-full overflow-hidden flex">
+                <div
+                  style={{ width: `${clamp(paidPercent, 0, 100)}%` }}
+                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700"
+                />
               </div>
             </div>
           </div>
         )}
 
-        {/* Tab 2: Top Weaver Balances (Horizontal Bar Graph) */}
-        {activeTab === 'weavers' && (
-          <div className="pt-4 space-y-3.5">
-            <p className="text-xs text-stone-500 font-medium">
-              Top 5 Weavers by Outstanding Due:
-            </p>
-
+        {/* Weavers Tab */}
+        {tab === 'weavers' && (
+          <div className="flex flex-col gap-4">
+            <p className="text-xs font-semibold text-stone-500">Top weavers by outstanding due:</p>
             {topDebtors.slice(0, 5).length > 0 ? (
-              <div className="space-y-3">
-                {topDebtors.slice(0, 5).map((debtor, index) => {
-                  const widthPercent = Math.max(8, Math.round((debtor.pendingBalance / maxDebtorBalance) * 100));
-                  return (
-                    <div key={debtor.id} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-stone-800 truncate max-w-[150px]">
-                          {index + 1}. {debtor.name}
+              <div className="space-y-3.5">
+                {topDebtors.slice(0, 5).map((d, i) => (
+                  <div key={d.id}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white shrink-0"
+                          style={{ background: DEBTOR_COLORS[i] || '#78716C' }}
+                        >
+                          {i + 1}
                         </span>
-                        <span className="font-extrabold text-rose-600">
-                          {formatINR(debtor.pendingBalance)}
-                        </span>
+                        <span className="text-xs font-bold text-stone-800 truncate">{d.name}</span>
                       </div>
-
-                      {/* Bar */}
-                      <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden">
-                        <div
-                          style={{ width: `${widthPercent}%` }}
-                          className="h-full bg-gradient-to-r from-silk-gold-500 via-rose-400 to-rose-500 rounded-full transition-all duration-700"
-                        ></div>
-                      </div>
+                      <span className="text-xs font-extrabold text-rose-600 shrink-0 ml-2">
+                        {formatINR(d.pendingBalance)}
+                      </span>
                     </div>
-                  );
-                })}
+                    <Bar
+                      widthPct={Math.round((d.pendingBalance / maxDebtor) * 100)}
+                      color={DEBTOR_COLORS[i] || '#78716C'}
+                    />
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-stone-400 text-xs">
-                No outstanding weaver dues to display.
+              <div className="flex flex-col items-center justify-center py-8 text-stone-400 gap-2">
+                <CheckCircle2 className="w-10 h-10 text-emerald-300" />
+                <p className="text-xs font-medium text-stone-500">All weavers are fully settled!</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Tab 3: Payment Modes Breakdown */}
-        {activeTab === 'modes' && (
-          <div className="pt-4 space-y-3">
-            <p className="text-xs text-stone-500 font-medium">
-              Vouchers & Advances by Payment Type:
-            </p>
-
+        {/* Modes Tab */}
+        {tab === 'modes' && (
+          <div className="flex flex-col gap-4">
+            <p className="text-xs font-semibold text-stone-500">Payment disbursement by method:</p>
             {paymentModes.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-3.5">
                 {paymentModes.map((item) => {
-                  const modeInfo = getModeColor(item.mode);
-                  const modePercent = totalModesAmount > 0 
-                    ? Math.round((item.amount / totalModesAmount) * 100) 
-                    : 0;
-
+                  const meta   = getMeta(item.mode);
+                  const pct    = totalMode > 0 ? Math.round((item.amount / totalMode) * 100) : 0;
                   return (
-                    <div key={item.mode} className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/70 space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full ${modeInfo.bg}`}></span>
-                          <span className="font-bold text-stone-800">{modeInfo.label}</span>
-                          <span className="text-[10px] text-stone-400">({item.count} {item.count === 1 ? 'voucher' : 'vouchers'})</span>
+                    <div key={item.mode}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${meta.badge} shrink-0`}
+                          >
+                            {meta.label}
+                          </span>
+                          <span className="text-[10px] text-stone-400">
+                            {item.count} {item.count === 1 ? 'voucher' : 'vouchers'}
+                          </span>
                         </div>
-                        <span className="font-extrabold text-stone-900">{formatINR(item.amount)}</span>
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <span className="text-[10px] font-semibold text-stone-500">{pct}%</span>
+                          <span className="text-xs font-extrabold text-stone-800">{formatINR(item.amount)}</span>
+                        </div>
                       </div>
-
-                      <div className="w-full h-2 bg-stone-200/80 rounded-full overflow-hidden">
-                        <div
-                          style={{ width: `${Math.max(5, modePercent)}%` }}
-                          className={`h-full ${modeInfo.bg} rounded-full transition-all duration-500`}
-                        ></div>
-                      </div>
+                      <Bar widthPct={pct} color={meta.color} />
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="text-center py-8 text-stone-400 text-xs">
-                No payment mode vouchers logged yet.
+              <div className="flex flex-col items-center justify-center py-8 text-stone-400 gap-2">
+                <Wallet className="w-10 h-10 text-stone-300" />
+                <p className="text-xs font-medium text-stone-500">No payment vouchers logged yet.</p>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Footer Info */}
-      <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
-        <span>Turnover Volume:</span>
-        <span className="font-bold text-stone-800">{formatINR(totalBillValue)}</span>
+      {/* ── Footer ─────────────────────────────────────────── */}
+      <div className="px-5 py-3 border-t border-stone-100 flex items-center justify-between">
+        <span className="text-[11px] text-stone-400 font-medium">Total Turnover</span>
+        <span className="text-sm font-extrabold text-stone-800">{formatINR(totalBillValue)}</span>
       </div>
     </div>
   );

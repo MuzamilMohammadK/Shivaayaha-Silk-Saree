@@ -41,13 +41,19 @@ export default function Dashboard({ onOpenBillModal, onOpenPartyModal }) {
     fetchOverview();
   }, []);
 
-  const stats = data?.stats || {
+  const rawStats = data?.stats || {
     totalParties: 0,
     totalBills: 0,
     totalBillValue: 0,
     totalPaidJama: 0,
     totalOutstandingBaki: 0,
     totalOpeningBalance: 0,
+  };
+
+  // Clamp due to ₹0 minimum — overpayments should not display as negative
+  const stats = {
+    ...rawStats,
+    totalOutstandingBaki: Math.max(0, rawStats.totalOutstandingBaki || 0),
   };
 
   return (
