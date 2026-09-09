@@ -113,6 +113,56 @@ export function getDashboardOverview(req, res) {
       };
     }).filter(p => p.pendingBalance > 0).sort((a, b) => b.pendingBalance - a.pendingBalance);
 
+    // 8. Payment Modes Breakdown
+    const paymentModes = query(
+      `SELECT payment_mode, COUNT(*) as count, COALESCE(SUM(amount), 0) as total_paise
+       FROM transactions
+       WHERE user_id = ? AND type = 'CREDIT'
+       GROUP BY payment_mode`,
+      [userId]
+    ).map(m => ({
+      mode: m.payment_mode,
+      count: m.count,
+      amount: toRupees(m.total_paise),
+    }));
+
+    // 9. Monthly Trends (Last 6 Months)
+    const monthlyInvoices = query(
+      `SELECT strftime('%Y-%m', bill_date) as month, COALESCE(SUM(gross_amount), 0) as billed_paise
+       FROM invoices
+       WHERE user_id = ?
+       GROUP BY month
+       ORDER BY month DESC
+       LIMIT 6`,
+      [userId]
+    );
+
+    const monthlyPayments = query(
+      `SELECT strftime('%Y-%m', transaction_date) as month, COALESCE(SUM(amount), 0) as paid_paise
+       FROM transactions
+       WHERE user_id = ? AND type = 'CREDIT'
+       GROUP BY month
+       ORDER BY month DESC
+       LIMIT 6`,
+      [userId]
+    );
+
+    // Merge months
+    const allMonths = Array.from(new Set([
+      ...monthlyInvoices.map(i => i.month),
+      ...monthlyPayments.map(p => p.month),
+    ])).filter(Boolean).sort();
+
+    const monthlyTrends = allMonths.map(month => {
+      const inv = monthlyInvoices.find(i => i.month === month);
+      const pay = monthlyPayments.find(p => p.month === month);
+      return {
+        month,
+        billed: inv ? toRupees(inv.billed_paise) : 0,
+        paid: pay ? toRupees(pay.paid_paise) : 0,
+      };
+    });
+
     return res.json({
       success: true,
       stats: {
@@ -123,6 +173,8 @@ export function getDashboardOverview(req, res) {
         totalOutstandingBaki: toRupees(totalOutstandingPaise),
         totalOpeningBalance: toRupees(totalOpeningPaise),
       },
+      paymentModes,
+      monthlyTrends,
       recentTransactions,
       recentInvoices,
       topDebtors,

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { dashboardService } from '../services/dashboardService';
 import { formatINR, formatDate, getStatusStyle, getPaymentModeDetails } from '../utils/formatters';
 import StatCard from '../components/StatCard';
+import DashboardChart from '../components/DashboardChart';
 import { 
   Receipt, 
   CreditCard, 
@@ -18,7 +19,7 @@ import {
   Smartphone
 } from 'lucide-react';
 
-export default function Dashboard({ onOpenBillModal, onOpenPaymentModal, onOpenPartyModal }) {
+export default function Dashboard({ onOpenBillModal, onOpenPartyModal }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -83,19 +84,11 @@ export default function Dashboard({ onOpenBillModal, onOpenPaymentModal, onOpenP
             </button>
 
             <button
-              onClick={onOpenPaymentModal}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-silk-gold-500 to-silk-gold-600 hover:from-silk-gold-400 hover:to-silk-gold-500 text-stone-950 font-extrabold text-xs sm:text-sm shadow-lg transition active:scale-95"
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>+ Record Payment</span>
-            </button>
-
-            <button
               onClick={onOpenPartyModal}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-stone-900/80 hover:bg-stone-900 text-stone-300 border border-stone-700 font-semibold text-xs sm:text-sm transition"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-stone-900/80 hover:bg-stone-900 text-stone-300 border border-stone-700 font-semibold text-xs sm:text-sm transition"
             >
               <UserPlus className="w-4 h-4 text-silk-gold-400" />
-              <span className="hidden sm:inline">+ Add Weaver</span>
+              <span>+ Add Weaver</span>
             </button>
           </div>
         </div>
@@ -221,58 +214,13 @@ export default function Dashboard({ onOpenBillModal, onOpenPaymentModal, onOpenP
           )}
         </div>
 
-        {/* Right 1 Col: Recent Manual Vouchers / Repayments */}
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-3">
-            <h2 className="font-brand font-bold text-base text-stone-900 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-600" />
-              <span>Recent Payments (Paid)</span>
-            </h2>
-            <button
-              onClick={onOpenPaymentModal}
-              className="text-xs font-bold text-emerald-700 hover:text-emerald-800"
-            >
-              + Record
-            </button>
-          </div>
-
-          {data?.recentTransactions?.length > 0 ? (
-            <div className="space-y-3 flex-1 overflow-y-auto max-h-[420px] pr-1">
-              {data.recentTransactions.map((tx) => {
-                const mode = getPaymentModeDetails(tx.paymentMode);
-                return (
-                  <div key={tx.id} className="p-3 bg-stone-50 hover:bg-stone-100/80 rounded-2xl border border-stone-200/60 transition text-xs">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-bold text-stone-900">{tx.partyName}</p>
-                        <p className="text-stone-500 text-[11px] mt-0.5">{formatDate(tx.transactionDate)}</p>
-                      </div>
-                      <span className="font-extrabold text-emerald-700 text-sm">
-                        + {formatINR(tx.amount)}
-                      </span>
-                    </div>
-
-                    <div className="mt-2 flex items-center justify-between gap-1 pt-1.5 border-t border-stone-200/50">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${mode.color}`}>
-                        {mode.label}
-                      </span>
-                      {tx.referenceNumber && (
-                        <span className="text-stone-500 truncate max-w-[140px] text-[11px] font-mono">
-                          Ref: {tx.referenceNumber}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-10 my-auto">
-              <CreditCard className="w-10 h-10 text-stone-300 mx-auto mb-2" />
-              <p className="text-xs font-medium text-stone-600">No payment vouchers logged yet</p>
-            </div>
-          )}
-        </div>
+        {/* Right 1 Col: Visual Ledger Analytics Chart Graph */}
+        <DashboardChart
+          stats={stats}
+          topDebtors={data?.topDebtors || []}
+          paymentModes={data?.paymentModes || []}
+          monthlyTrends={data?.monthlyTrends || []}
+        />
 
       </div>
 
