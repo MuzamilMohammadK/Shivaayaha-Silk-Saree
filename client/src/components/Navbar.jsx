@@ -49,9 +49,6 @@ export default function Navbar({ onOpenBillModal, onOpenPaymentModal, onOpenPart
                 <span className="font-brand font-bold text-lg sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-silk-gold-200 via-silk-gold-400 to-silk-gold-300 tracking-wider">
                   Shivaayaha Silk Sarees
                 </span>
-                <span className="hidden md:inline-block px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-widest bg-silk-gold-500/20 text-silk-gold-300 rounded border border-silk-gold-400/40">
-                  Manual Ledger
-                </span>
               </div>
               <p className="text-[11px] sm:text-xs text-stone-300 font-sans tracking-wide">
                 Dharmavaram &bull; Traditional Silk Lot Book
