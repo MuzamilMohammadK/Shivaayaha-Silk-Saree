@@ -1,4 +1,4 @@
-﻿// Automated Smoke Verification for Shivaayaha Silk Sarees Ledger Engine
+// Automated Smoke Verification for Shivaayaha Silk Sarees Ledger Engine
 
 const BASE_URL = 'http://localhost:5000/api';
 
@@ -119,8 +119,8 @@ async function runTests() {
   }).then(r => r.json());
   console.log('8. Dashboard Overview KPIs:');
   console.log('   - Total Bill Value:', dashRes.stats?.totalBillValue);
-  console.log('   - Total Paid (Paid):', dashRes.stats?.totalPaidPAID);
-  console.log('   - Total Outstanding (Due):', dashRes.stats?.totalOutstandingDUE);
+  console.log('   - Total Paid:', dashRes.stats?.totalPaid ?? dashRes.stats?.totalPaidJama);
+  console.log('   - Total Outstanding Due:', dashRes.stats?.totalOutstandingDue ?? dashRes.stats?.totalOutstandingBaki);
 
   console.log('--- ALL AUTOMATED VERIFICATIONS PASSED SUCCESSFULLY ---');
 }

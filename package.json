@@ -1,0 +1,24 @@
+{
+  "name": "shivaayaha-silk-sarees",
+  "version": "1.0.0",
+  "description": "Production-Grade Manual Ledger & Paid & Due Bookkeeping System for Shivaayaha Silk Sarees",
+  "private": true,
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "test": "node server/test_khata_engine.js",
+    "install:server": "npm --prefix server install",
+    "install:client": "npm --prefix client install",
+    "install:all": "npm run install:server && npm run install:client"
+  },
+  "keywords": [
+    "ledger",
+    "khata",
+    "silk-sarees",
+    "accounting",
+    "weaver-management"
+  ],
+  "author": "Muzamil Mohammad K",
+  "license": "ISC"
+}

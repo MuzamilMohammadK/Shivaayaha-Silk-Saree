@@ -98,7 +98,6 @@ Every time cash is handed over, a UPI payment is sent from your phone, a cheque 
 | **Current Pending Due** | Live amount you currently owe this party | *₹45,000* |
 | **Link To Bill / Lot** | Ties the payment to a specific saree lot invoice | *Lot #LOT-2024-001* |
 | **Payment Amount** | Amount paid in Rupees (₹) | *₹20,000* |
-| **Payment Date** | The date on which payment was given/sent | *DD/MM/YYYY* |
-| **Payment Mode** | Cash, Manual UPI, Cheque, or IMPS/NEFT | *Manual UPI* |
-| **Reference / UTR** | Transaction ID, Cheque number, or paper voucher # | *UTR: 423985109283* |
-| **Paper Slip Memo** | Any additional remarks or handwritten notes | *Paid to weaver's son at shop* |
+| **Payment Mode** | Mode of payment | *Cash, Manual UPI, Cheque, IMPS/NEFT* |
+| **Ref / UTR / Cheque** | Hand-typed confirmation reference | *UTR-328904812390* |
+| **Memo / Notes** | Physical slip or diary note | *Paid via PhonePe at counter* |

@@ -1,4 +1,4 @@
-﻿# Shivaayaha Silk Sarees (Shivaya Silk Sarees)
+# Shivaayaha Silk Sarees (Shivaya Silk Sarees)
 ### Production-Grade Manual Ledger & Paid & Due Ledger Web and Mobile Application
 
 A clean, high-contrast, traditional silk-themed manual bookkeeping system built for wholesale and retail silk saree shops. Tailored for weaver purchase lots, down-payment advances, and cash/manual UPI repayment vouchers.
@@ -48,48 +48,54 @@ A clean, high-contrast, traditional silk-themed manual bookkeeping system built 
 ## Directory Structure
 
 ```
-madhu/
+shivaayaha-silk-sarees/
+├── package.json               # Root scripts (run client & server, install, test)
+├── .env.example               # Unified environment variables guide
+├── README.md                  # Main overview & quickstart
+├── docs/                      # Centralized documentation
+│   ├── ARCHITECTURE.md        # Technical architecture, schema & ledger formulas
+│   ├── RECORD_PAYMENT_GUIDE.md# End-user workflow guide for manual payment vouchers
+│   └── RECORD_PAYMENT_USES.txt# Plain-text quick reference for shop staff
 ├── server/
 │   ├── src/
 │   │   ├── config/
-│   │   │   └── db.js               # SQLite connection, schema bootstrap & persistence
-│   │   ├── controllers/
-│   │   │   ├── authController.js   # Register, Login, Forgot Password, Reset Password
-│   │   │   ├── partyController.js  # Weaver directory & chronological running ledger
-│   │   │   ├── invoiceController.js# Purchase lots & live balance calculations
-│   │   │   ├── transactionController.js # Atomic payment vouchers
-│   │   │   └── dashboardController.js   # Overall Paid & Due aggregates
-│   │   ├── middleware/
-│   │   │   └── authMiddleware.js   # JWT authentication verification
-│   │   ├── routes/                 # Express API endpoints
-│   │   ├── utils/
-│   │   │   └── currency.js         # Exact paise/rupee arithmetic
-│   │   └── server.js               # Express application entrypoint
-│   ├── schema.sql                  # PostgreSQL & SQLite DDL
+│   │   │   └── db.js          # SQLite connection, schema bootstrap & persistence
+│   │   ├── controllers/       # Auth, Party, Invoice, Transaction, Dashboard
+│   │   ├── middleware/        # JWT authentication verification
+│   │   ├── routes/            # Express API endpoints
+│   │   ├── utils/             # Exact paise/rupee arithmetic
+│   │   └── server.js          # Express application entrypoint
+│   ├── schema.sql             # PostgreSQL & SQLite DDL
+│   ├── test_khata_engine.js   # Automated ledger math integration tests
 │   ├── package.json
 │   └── .env.example
 ├── client/
-│   ├── public/
-│   │   ├── manifest.json           # PWA installation manifest
-│   │   ├── sw.js                   # PWA service worker
-│   │   ├── logo.jpg                # Shivaayaha Silk Sarees luxury brand icon
-│   │   └── favicon.svg             # Vector brand icon
+│   ├── public/                # PWA manifest, service worker, icons & logos
 │   ├── src/
-│   │   ├── components/             # Navbar, MobileNav, Modals, StatCards, Banners
-│   │   ├── context/                # AuthContext & ToastContext
-│   │   ├── pages/                  # Login, Register, Forgot/Reset, Dashboard, Ledger
-│   │   ├── services/               # Axios API callers
-│   │   ├── utils/                  # Indian currency & date formatters
+│   │   ├── components/        # Modals, Navbars, StatCards, Analytics Charts
+│   │   ├── context/           # AuthContext & ToastContext
+│   │   ├── pages/             # Dashboard, Parties, Ledger, Invoices, Auth
+│   │   ├── services/          # Modular Axios API service callers
+│   │   ├── utils/             # Indian currency & date formatters
 │   │   ├── App.jsx
 │   │   ├── main.jsx
-│   │   └── index.css               # Traditional silk maroon & zari gold styles
-│   ├── capacitor.config.json       # Android Capacitor configuration
+│   │   └── index.css          # Traditional silk maroon & zari gold styles
+│   ├── capacitor.config.json  # Android Capacitor configuration
 │   ├── tailwind.config.js
 │   ├── vite.config.js
+│   ├── .env.example
 │   └── package.json
-├── .gitignore
-└── README.md
+└── .gitignore
 ```
+
+---
+
+## Documentation Library
+
+Detailed documentation can be found in the [`docs/`](docs/) directory:
+- 📖 [Technical Architecture & Calculations (`docs/ARCHITECTURE.md`)](docs/ARCHITECTURE.md)
+- 📝 [Record Payment User Guide (`docs/RECORD_PAYMENT_GUIDE.md`)](docs/RECORD_PAYMENT_GUIDE.md)
+- 📄 [Record Payment Quick Uses (`docs/RECORD_PAYMENT_USES.txt`)](docs/RECORD_PAYMENT_USES.txt)
 
 ---
 
@@ -99,22 +105,29 @@ madhu/
 - Node.js (v18 or higher)
 - npm (v9 or higher)
 
-### 1. Start Backend Server
+### 1. Quick Setup
+From the project root directory, install all dependencies:
 ```bash
-cd server
-npm install
-npm start
+npm run install:all
 ```
-The server will start on `http://localhost:5000` and automatically create the SQLite database `server/shivaayaha.sqlite`.
 
-### 2. Start Frontend Web Application
-In a separate terminal:
+### 2. Run the Application
+In one terminal, launch the backend server:
 ```bash
-cd client
-npm install
-npm run dev
+npm run dev:server
 ```
-Open `http://localhost:5173` in your browser.
+*The server will start on `http://localhost:5000` and automatically initialize `server/shivaayaha.sqlite`.*
+
+In another terminal, launch the frontend client:
+```bash
+npm run dev:client
+```
+*Open `http://localhost:5173` in your browser.*
+
+### 3. Run Automated Khata Engine Verification
+```bash
+npm test
+```
 
 ---
 
