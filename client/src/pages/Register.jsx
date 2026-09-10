@@ -41,7 +41,11 @@ export default function Register() {
       navigate('/dashboard');
     } catch (error) {
       console.error(error);
-      showToast(error.response?.data?.message || 'Registration failed.', 'error');
+      if (error.response?.status === 405 || (error.code === 'ERR_NETWORK' && !error.response)) {
+        showToast('Backend server is not configured. Set VITE_API_URL in GitHub secrets.', 'error');
+      } else {
+        showToast(error.response?.data?.message || 'Registration failed.', 'error');
+      }
     } finally {
       setLoading(false);
     }

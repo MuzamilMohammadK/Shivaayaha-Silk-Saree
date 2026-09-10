@@ -38,9 +38,6 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: npm run build
 
-      - name: Create 404.html for SPA routing on GitHub Pages
-        run: cp ./client/dist/index.html ./client/dist/404.html
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

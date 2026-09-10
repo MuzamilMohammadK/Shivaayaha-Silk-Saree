@@ -1,14 +1,26 @@
 import axios from 'axios';
 
-// When running in Capacitor on an Android device or emulator, requests go to localhost:5000 or the local machine IP
-// In web development, Vite proxies '/api' to 'http://localhost:5000/api'
+// In local dev: Vite proxies '/api' → 'http://localhost:5000/api'
+// In production (GitHub Pages): VITE_API_URL must be set to your deployed backend URL
+//   e.g. https://your-app.railway.app/api
+//   Set it as a GitHub Actions secret: VITE_API_URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
+// Warn clearly if the app is running in production without a backend URL configured
+if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
+  console.warn(
+    '[Shivaayaha] VITE_API_URL is not set.\n' +
+    'API calls will fail on GitHub Pages (static host).\n' +
+    'Deploy the Express backend and set VITE_API_URL in your GitHub Actions secrets.'
+  );
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 15000, // 15 second timeout
 });
 
 // Attach JWT token from localStorage to every outgoing request
@@ -23,21 +35,30 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Intercept 401 Unauthorized responses to clear token and prompt login
+// Intercept error responses
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // 405 Method Not Allowed = hitting GitHub Pages with API calls (no backend configured)
+    if (error.response && error.response.status === 405) {
+      console.error(
+        '[Shivaayaha] 405 Method Not Allowed — the backend server is not configured.\n' +
+        'Set the VITE_API_URL GitHub secret to your deployed backend URL.'
+      );
+    }
+
+    // 401 Unauthorized = expired/invalid token → clear storage and redirect to login
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('shivaayaha_token');
       sessionStorage.removeItem('shivaayaha_token');
       localStorage.removeItem('shivaayaha_user');
-      // Only redirect if not already on login or register
+      // Use base-path-aware redirect (works for both local dev and GitHub Pages)
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-        // Use base-path-aware redirect (works for both local dev and GitHub Pages deploy)
         const base = import.meta.env.BASE_URL || '/';
         window.location.href = base.replace(/\/$/, '') + '/login';
       }
     }
+
     return Promise.reject(error);
   }
 );

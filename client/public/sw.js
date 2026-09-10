@@ -1,38 +1,31 @@
 // Shivaayaha Silk Sarees — Service Worker
-// Automatically unregisters itself in development (localhost) mode
+// • Dev (localhost): immediately unregisters itself so Vite HMR works
+// • Production: caches app shell and passes API calls to the backend
 
 const IS_DEV = self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1';
 
-// In development mode: immediately unregister this SW so Vite can work properly
 if (IS_DEV) {
-  self.addEventListener('install', () => {
-    self.skipWaiting();
-  });
+  // ── DEV MODE: self-destruct so Vite is never intercepted ───────────────────
+  self.addEventListener('install', () => self.skipWaiting());
 
   self.addEventListener('activate', (event) => {
-    // Unregister self in dev to stop intercepting Vite requests
     event.waitUntil(
-      self.registration.unregister().then(() => {
-        // Force all clients to reload without the SW
-        return self.clients.matchAll({ type: 'window' });
-      }).then((clients) => {
-        clients.forEach((client) => {
-          if (client.navigate) client.navigate(client.url);
-        });
+      self.registration.unregister().then(() =>
+        self.clients.matchAll({ type: 'window' })
+      ).then((clients) => {
+        clients.forEach((c) => { if (c.navigate) c.navigate(c.url); });
       })
     );
   });
 
-  // Pass ALL fetch events through — never intercept in dev
-  self.addEventListener('fetch', () => {
-    return;
-  });
+  // Never intercept any requests in dev
+  self.addEventListener('fetch', () => { return; });
 
 } else {
-  // ── PRODUCTION MODE ──────────────────────────────────────────────────────
-  const CACHE_NAME = 'shivaayaha-ledger-v3';
+  // ── PRODUCTION MODE ────────────────────────────────────────────────────────
+  const CACHE_NAME = 'shivaayaha-ledger-v4';
   const BASE = '/Shivaayaha-Silk-Saree';
-  const ASSETS_TO_CACHE = [
+  const APP_SHELL = [
     BASE + '/',
     BASE + '/index.html',
     BASE + '/manifest.json',
@@ -42,48 +35,57 @@ if (IS_DEV) {
   self.addEventListener('install', (event) => {
     event.waitUntil(
       caches.open(CACHE_NAME)
-        .then((cache) => cache.addAll(ASSETS_TO_CACHE))
+        .then((cache) => cache.addAll(APP_SHELL))
         .then(() => self.skipWaiting())
     );
   });
 
   self.addEventListener('activate', (event) => {
     event.waitUntil(
-      caches.keys().then((cacheNames) =>
-        Promise.all(
-          cacheNames
-            .filter((name) => name !== CACHE_NAME)
-            .map((name) => caches.delete(name))
-        )
-      )
+      caches.keys()
+        .then((keys) => Promise.all(
+          keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+        ))
+        .then(() => self.clients.claim())
     );
-    self.clients.claim();
   });
 
   self.addEventListener('fetch', (event) => {
-    // Let API calls pass through directly — never cache backend requests
-    if (event.request.url.includes('/api/')) {
+    const { request } = event;
+    const url = new URL(request.url);
+
+    // 1. Always let API calls (POST/PUT/DELETE) pass straight through — never cache them
+    if (url.pathname.includes('/api/') || request.method !== 'GET') {
+      return; // browser handles it natively
+    }
+
+    // 2. For navigation requests (page loads), serve index.html from cache
+    //    This enables SPA routing (React Router) to work offline / on reload
+    if (request.mode === 'navigate') {
+      event.respondWith(
+        caches.match(BASE + '/index.html')
+          .then((cached) => cached || fetch(request))
+          .catch(() => new Response('<h1>Offline</h1>', {
+            headers: { 'Content-Type': 'text/html' }
+          }))
+      );
       return;
     }
 
+    // 3. For all other GET assets: cache-first, then network
     event.respondWith(
-      caches.match(event.request).then(async (cached) => {
+      caches.match(request).then((cached) => {
         if (cached) return cached;
-        try {
-          return await fetch(event.request);
-        } catch {
-          // Offline fallback: return the cached app shell for any navigation
-          if (event.request.mode === 'navigate') {
-            const shell = await caches.match(BASE + '/') ||
-                          await caches.match(BASE + '/index.html');
-            if (shell) return shell;
-          }
-          // Return a minimal offline response so the SW doesn't crash
-          return new Response('Offline - please check your connection.', {
-            status: 503,
-            headers: { 'Content-Type': 'text/plain' },
-          });
-        }
+        return fetch(request)
+          .then((networkResponse) => {
+            // Cache successful responses for future offline use
+            if (networkResponse && networkResponse.status === 200) {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+            }
+            return networkResponse;
+          })
+          .catch(() => new Response('', { status: 503 }));
       })
     );
   });
