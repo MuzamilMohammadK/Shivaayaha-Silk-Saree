@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    // GitHub Pages SPA Redirect — Single Page App 404 fix
+    // When GitHub Pages 404s on a deep route (e.g. /register, /dashboard),
+    // this script encodes the path into a query string and redirects to index.html
+    // which then decodes it and uses history.replaceState to restore the real URL.
+    var l = window.location;
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.pathname.split('/').slice(0, 2).join('/') +
+      '/?p=' + encodeURIComponent(
+        l.pathname.slice(1) + (l.search ? '&q=' + l.search.slice(1) : '') + l.hash
+      )
+    );
+  </script>
+</head>
+<body></body>
+</html>
