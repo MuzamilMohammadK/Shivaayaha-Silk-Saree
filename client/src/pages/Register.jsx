@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+import logoImg from '../assets/logo.jpg';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -57,7 +58,7 @@ export default function Register() {
         {/* Brand Header */}
         <div className="text-center">
           <div className="mx-auto w-20 h-20 rounded-full overflow-hidden border-2 border-silk-gold-400 p-1 shadow-2xl bg-silk-maroon-950 mb-3">
-            <img src="/logo.jpg" alt="Shivaayaha Silk Sarees" className="w-full h-full object-cover rounded-full" />
+            <img src={logoImg} alt="Shivaayaha Silk Sarees" className="w-full h-full object-cover rounded-full" />
           </div>
           <h1 className="font-brand font-bold text-2xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-silk-gold-200 via-silk-gold-400 to-silk-gold-300">
             Shivaayaha Silk Sarees

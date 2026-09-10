@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logoImg from '../assets/logo.jpg';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -42,7 +43,7 @@ export default function Navbar({ onOpenBillModal, onOpenPaymentModal, onOpenPart
           {/* Brand Identity */}
           <Link to="/dashboard" className="flex items-center gap-3 group">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-silk-gold-400 p-0.5 shadow-md group-hover:scale-105 transition-transform bg-silk-maroon-950 shrink-0">
-              <img src="/logo.jpg" alt="Shivaayaha Silk Sarees" className="w-full h-full object-cover rounded-full" />
+              <img src={logoImg} alt="Shivaayaha Silk Sarees" className="w-full h-full object-cover rounded-full" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">

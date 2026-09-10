@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import logoImg from '../assets/logo.jpg';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { partyService } from '../services/partyService';
 import { useToast } from '../context/ToastContext';
@@ -128,7 +129,7 @@ export default function PartyLedger({ onOpenBillModal, onOpenPaymentModal, refre
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-stone-200 gap-4">
           <div className="flex items-center gap-3">
             <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-silk-gold-500 p-0.5 bg-silk-maroon-950 shrink-0">
-              <img src="/logo.jpg" alt="Shivaayaha Silk Sarees" className="w-full h-full object-cover rounded-full" />
+              <img src={logoImg} alt="Shivaayaha Silk Sarees" className="w-full h-full object-cover rounded-full" />
             </div>
             <div>
               <h2 className="font-brand font-bold text-xl sm:text-2xl text-silk-maroon-900 tracking-wider">
