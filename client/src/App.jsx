@@ -196,7 +196,7 @@ function AppContent() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/Shivaayaha-Silk-Saree">
       <ToastProvider>
         <AuthProvider>
           <AppContent />
