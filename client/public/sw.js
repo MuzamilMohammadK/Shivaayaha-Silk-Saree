@@ -1,9 +1,10 @@
-﻿const CACHE_NAME = 'shivaayaha-Ledger-v1';
+const CACHE_NAME = 'shivaayaha-Ledger-v2';
+const BASE = '/Shivaayaha-Silk-Saree';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.svg'
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/manifest.json',
+  BASE + '/favicon.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -39,7 +40,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request).catch(() => {
-        return caches.match('/');
+        return caches.match(BASE + '/');
       });
     })
   );

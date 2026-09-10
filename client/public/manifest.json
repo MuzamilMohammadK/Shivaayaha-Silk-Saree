@@ -1,21 +1,22 @@
-﻿{
+{
   "name": "Shivaayaha Silk Sarees - Manual Ledger",
   "short_name": "Shivaayaha Ledger",
   "description": "Manual Ledger and Paid & Due Bookkeeping for Shivaayaha Silk Sarees",
-  "start_url": "/",
+  "start_url": "/Shivaayaha-Silk-Saree/",
+  "scope": "/Shivaayaha-Silk-Saree/",
   "display": "standalone",
   "background_color": "#32060E",
   "theme_color": "#6B1724",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/Shivaayaha-Silk-Saree/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/Shivaayaha-Silk-Saree/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
