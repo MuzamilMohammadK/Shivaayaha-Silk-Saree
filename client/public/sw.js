@@ -67,13 +67,23 @@ if (IS_DEV) {
     }
 
     event.respondWith(
-      caches.match(event.request).then((cached) => {
+      caches.match(event.request).then(async (cached) => {
         if (cached) return cached;
-        return fetch(event.request).catch(() => {
+        try {
+          return await fetch(event.request);
+        } catch {
+          // Offline fallback: return the cached app shell for any navigation
           if (event.request.mode === 'navigate') {
-            return caches.match(BASE + '/');
+            const shell = await caches.match(BASE + '/') ||
+                          await caches.match(BASE + '/index.html');
+            if (shell) return shell;
           }
-        });
+          // Return a minimal offline response so the SW doesn't crash
+          return new Response('Offline - please check your connection.', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain' },
+          });
+        }
       })
     );
   });
