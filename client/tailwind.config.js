@@ -45,6 +45,10 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         serif: ['Playfair Display', 'Georgia', 'serif'],
+        brand: ['Cinzel', 'Playfair Display', 'Georgia', 'serif'],
+      },
+      scale: {
+        '98': '.98',
       },
     },
   },

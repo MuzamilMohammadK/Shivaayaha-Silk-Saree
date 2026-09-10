@@ -22,14 +22,24 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      // Service Worker Registration for PWA mobile install
+      // Service Worker: Unregister any stale SW first, then register the fresh one
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').then((registration) => {
-            console.log('PWA ServiceWorker registered successfully:', registration.scope);
-          }).catch((err) => {
+        window.addEventListener('load', async () => {
+          try {
+            // Unregister all existing service workers to clear any stale cache
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const reg of registrations) {
+              // Only unregister workers from a different scope or with old cache version
+              if (reg.scope !== window.location.origin + '/') {
+                await reg.unregister();
+              }
+            }
+            // Register the fresh service worker
+            const registration = await navigator.serviceWorker.register('./sw.js');
+            console.log('PWA ServiceWorker registered:', registration.scope);
+          } catch (err) {
             console.log('PWA ServiceWorker registration failed:', err);
-          });
+          }
         });
       }
     </script>

@@ -33,7 +33,9 @@ api.interceptors.response.use(
       localStorage.removeItem('shivaayaha_user');
       // Only redirect if not already on login or register
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-        window.location.href = '/login';
+        // Use base-path-aware redirect (works for both local dev and GitHub Pages deploy)
+        const base = import.meta.env.BASE_URL || '/';
+        window.location.href = base.replace(/\/$/, '') + '/login';
       }
     }
     return Promise.reject(error);

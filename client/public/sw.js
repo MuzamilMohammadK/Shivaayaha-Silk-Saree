@@ -1,47 +1,80 @@
-const CACHE_NAME = 'shivaayaha-Ledger-v2';
-const BASE = '/Shivaayaha-Silk-Saree';
-const ASSETS_TO_CACHE = [
-  BASE + '/',
-  BASE + '/index.html',
-  BASE + '/manifest.json',
-  BASE + '/favicon.svg'
-];
+// Shivaayaha Silk Sarees — Service Worker
+// Automatically unregisters itself in development (localhost) mode
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-  self.skipWaiting();
-});
+const IS_DEV = self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1';
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
+// In development mode: immediately unregister this SW so Vite can work properly
+if (IS_DEV) {
+  self.addEventListener('install', () => {
+    self.skipWaiting();
+  });
 
-self.addEventListener('fetch', (event) => {
-  // Let API requests pass through to backend directly
-  if (event.request.url.includes('/api/')) {
+  self.addEventListener('activate', (event) => {
+    // Unregister self in dev to stop intercepting Vite requests
+    event.waitUntil(
+      self.registration.unregister().then(() => {
+        // Force all clients to reload without the SW
+        return self.clients.matchAll({ type: 'window' });
+      }).then((clients) => {
+        clients.forEach((client) => {
+          if (client.navigate) client.navigate(client.url);
+        });
+      })
+    );
+  });
+
+  // Pass ALL fetch events through — never intercept in dev
+  self.addEventListener('fetch', () => {
     return;
-  }
+  });
 
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch(() => {
-        return caches.match(BASE + '/');
-      });
-    })
-  );
-});
+} else {
+  // ── PRODUCTION MODE ──────────────────────────────────────────────────────
+  const CACHE_NAME = 'shivaayaha-ledger-v3';
+  const BASE = '/Shivaayaha-Silk-Saree';
+  const ASSETS_TO_CACHE = [
+    BASE + '/',
+    BASE + '/index.html',
+    BASE + '/manifest.json',
+    BASE + '/favicon.svg',
+  ];
+
+  self.addEventListener('install', (event) => {
+    event.waitUntil(
+      caches.open(CACHE_NAME)
+        .then((cache) => cache.addAll(ASSETS_TO_CACHE))
+        .then(() => self.skipWaiting())
+    );
+  });
+
+  self.addEventListener('activate', (event) => {
+    event.waitUntil(
+      caches.keys().then((cacheNames) =>
+        Promise.all(
+          cacheNames
+            .filter((name) => name !== CACHE_NAME)
+            .map((name) => caches.delete(name))
+        )
+      )
+    );
+    self.clients.claim();
+  });
+
+  self.addEventListener('fetch', (event) => {
+    // Let API calls pass through directly — never cache backend requests
+    if (event.request.url.includes('/api/')) {
+      return;
+    }
+
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).catch(() => {
+          if (event.request.mode === 'navigate') {
+            return caches.match(BASE + '/');
+          }
+        });
+      })
+    );
+  });
+}

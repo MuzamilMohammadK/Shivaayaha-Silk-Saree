@@ -4,6 +4,7 @@
   "description": "Production-Grade Manual Ledger & Paid & Due Bookkeeping System for Shivaayaha Silk Sarees",
   "private": true,
   "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" --names \"server,client\" --prefix-colors \"red,blue\"",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
@@ -11,6 +12,9 @@
     "install:server": "npm --prefix server install",
     "install:client": "npm --prefix client install",
     "install:all": "npm run install:server && npm run install:client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
   },
   "keywords": [
     "ledger",
