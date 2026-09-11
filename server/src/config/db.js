@@ -5,7 +5,11 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const dbFilePath = path.resolve(__dirname, '../../shivaayaha.sqlite');
+
+// DB_PATH env var allows deploying to a persistent disk (e.g. Railway volumes)
+const dbFilePath = process.env.DB_PATH
+  ? path.resolve(process.env.DB_PATH)
+  : path.resolve(__dirname, '../../shivaayaha.sqlite');
 
 let dbInstance = null;
 

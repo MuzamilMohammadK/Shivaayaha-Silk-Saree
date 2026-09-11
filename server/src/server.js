@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { initDb } from './config/db.js';
@@ -12,10 +12,17 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Parse CORS_ORIGIN env var — comma-separated list or wildcard for development
+const rawOrigins = process.env.CORS_ORIGIN || '';
+const allowedOrigins = rawOrigins
+  ? rawOrigins.split(',').map((o) => o.trim())
+  : ['http://localhost:5173', 'capacitor://localhost', 'http://localhost'];
 
 // Enable CORS for web frontend & mobile apps (Capacitor localhost)
 app.use(cors({
-  origin: '*',
+  origin: NODE_ENV === 'development' ? '*' : allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
