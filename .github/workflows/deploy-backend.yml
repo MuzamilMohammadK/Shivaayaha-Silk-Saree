@@ -1,0 +1,59 @@
+name: Deploy Backend to AWS EC2
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'server/**'           # Only triggers when server code changes
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:          # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  deploy:
+    name: SSH Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH to AWS EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e  # Exit immediately if any command fails
+
+            APP_DIR=~/shivaayaha-app
+
+            # ── 1. Clone repo on first deploy, pull updates on subsequent runs ──
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo ">>> First deploy: cloning repository..."
+              git clone https://github.com/MuzamilMohammadK/Shivaayaha-Silk-Saree.git $APP_DIR
+            else
+              echo ">>> Pulling latest changes..."
+              cd $APP_DIR
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
+            cd $APP_DIR/server
+
+            # ── 2. Install production dependencies ──
+            echo ">>> Installing dependencies..."
+            npm install --omit=dev
+
+            # ── 3. Start or reload with PM2 ──
+            echo ">>> Starting/reloading PM2 process..."
+            if pm2 list | grep -q "shivaayaha-api"; then
+              pm2 reload ecosystem.config.cjs --only shivaayaha-api
+            else
+              pm2 start ecosystem.config.cjs --only shivaayaha-api
+            fi
+
+            # ── 4. Save PM2 process list (survives server reboot) ──
+            pm2 save
+
+            echo ">>> ✅ Deployment complete!"
